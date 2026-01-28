@@ -1,9 +1,13 @@
 .panel {
-  background: rgba(20, 20, 30, 0.8);
+  background: linear-gradient(to top, 
+    rgba(15, 240, 252, 0) 0%, 
+    rgba(15, 240, 252, 0.02) 100%
+  );
+  
   border-radius: 0;
   padding: 1.75rem;
   transition: all 0.3s ease;
-  border: 1px solid #1E2939;
+  border: 1px solid rgba(30, 41, 57, 0.5);
   border-right: none;
 }
 
