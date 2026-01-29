@@ -1,11 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-
 @theme {
---font-roboto: "Roboto Mono", monospace;
+  --font-roboto: "Roboto Mono", sans-serif;
 }
-
 
 /* * {
   box-sizing: border-box;
@@ -46,7 +44,7 @@ select:focus,
 textarea:focus {
   outline: 2px solid #fff;
   outline-offset: 2px;
-} */ 
+} */
 
 /* Ensure sufficient color contrast */
 /* body {
@@ -63,9 +61,8 @@ textarea:focus {
   padding: 8px;
   text-decoration: none;
   z-index: 100;
-} 
+}
 
 .skip-link:focus {
   top: 6px;
 }
-
