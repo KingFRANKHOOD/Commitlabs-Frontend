@@ -127,22 +127,25 @@ export default function MyCommitments() {
                   </div>
                 </div>
 
-                <div className={styles.cardActions}>
-                  <button className={styles.actionButton} aria-label={`View details for ${commitment.type} commitment`}>
-                    View Details
-                  </button>
-                  <button className={styles.actionButton} aria-label={`View attestations for ${commitment.type} commitment`}>
-                    View Attestations
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.actionButtonDanger}
-                    aria-label={`Early exit for ${commitment.type} commitment`}
-                    onClick={() => openEarlyExitModal(commitment.id)}
-                  >
-                    Early Exit
-                  </button>
-                </div>
+              <div className={styles.cardActions}>
+                <Link
+                  href={`/commitments/${commitment.id}`}
+                  className={styles.actionButton}
+                  aria-label={`View details for ${commitment.type} commitment`}
+                >
+                  View Details
+                </Link>
+                <button className={styles.actionButton} aria-label={`View attestations for ${commitment.type} commitment`}>
+                  View Attestations
+                </button>
+                <button
+                  type="button"
+                  className={styles.actionButtonDanger}
+                  aria-label={`Early exit for ${commitment.type} commitment`}
+                  onClick={() => openEarlyExitModal(commitment.id)}
+                >
+                  Early Exit
+                </button>
               </div>
             ))
           )}

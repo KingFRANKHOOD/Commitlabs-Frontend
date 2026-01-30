@@ -1,58 +1,54 @@
-'use client';
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { CommitmentDetailParameters } from '@/components/CommitmentDetailParameters/CommitmentDetailParameters'
+import styles from './page.module.css'
 
-import React from 'react';
-import Link from 'next/link';
-import CommitmentHealthMetrics from '../../../components/dashboard/CommitmentHealthMetrics';
+// TODO: Replace with actual data from contracts; keep in sync with list page mock data
+const MOCK_COMMITMENTS: Record<
+  string,
+  { id: string; type: string; duration: number; maxLoss: number; earlyExitPenaltyPercent?: number }
+> = {
+  '1': { id: '1', type: 'Balanced', duration: 60, maxLoss: 8, earlyExitPenaltyPercent: 3 },
+  '2': { id: '2', type: 'Safe', duration: 30, maxLoss: 2, earlyExitPenaltyPercent: 3 },
+}
 
-// Mock data for the commitment
-const MOCK_COMPLIANCE_DATA = [
-    { date: 'Jan 1', complianceScore: 98 },
-    { date: 'Jan 5', complianceScore: 97 },
-    { date: 'Jan 10', complianceScore: 99 },
-    { date: 'Jan 15', complianceScore: 95 },
-    { date: 'Jan 20', complianceScore: 98 },
-    { date: 'Jan 25', complianceScore: 100 },
-    { date: 'Jan 30', complianceScore: 99 },
-];
+function getCommitmentById(id: string) {
+  return MOCK_COMMITMENTS[id] ?? null
+}
 
 export default function CommitmentDetailPage({
-    params,
+  params,
 }: {
-    params: { id: string };
+  params: { id: string }
 }) {
-    return (
-        <main className="min-h-screen bg-[#050505] text-[#f5f5f7] p-4 sm:p-8 lg:p-12">
-            <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
-                <header className="flex flex-col gap-4">
-                    <Link
-                        href="/commitments"
-                        className="text-[#666] hover:text-[#0ff0fc] transition-colors text-sm w-fit"
-                    >
-                        ← Back to Commitments
-                    </Link>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-[#99a1af]">
-                                Commitment #{params.id}
-                            </h1>
-                            <p className="text-[#99a1af] mt-2">
-                                Active • Balanced Strategy
-                            </p>
-                        </div>
-                        <div className="hidden sm:block">
-                            <span className="px-4 py-2 bg-[#1a1a1a] border border-[#222] rounded-lg text-[#0ff0fc] text-sm font-medium">
-                                Active
-                            </span>
-                        </div>
-                    </div>
-                </header>
+  const commitment = getCommitmentById(params.id)
+  if (!commitment) notFound()
 
-                {/* Health Metrics Section */}
-                <section>
-                    <CommitmentHealthMetrics complianceData={MOCK_COMPLIANCE_DATA} />
-                </section>
-            </div>
-        </main>
-    );
+  const durationLabel = `${commitment.duration} days`
+  const maxLossLabel = `${commitment.maxLoss}%`
+  const commitmentTypeLabel = commitment.type
+  const earlyExitPenaltyLabel = `${commitment.earlyExitPenaltyPercent ?? 3}%`
+
+  return (
+    <main id="main-content" className={styles.container}>
+      <header className={styles.header}>
+        <Link href="/commitments" className={styles.backLink} aria-label="Back to My Commitments">
+          ← Back to My Commitments
+        </Link>
+        <h1>{commitment.type} Commitment #{commitment.id}</h1>
+        <p>Commitment details and parameters</p>
+      </header>
+
+      <CommitmentDetailParameters
+        durationLabel={durationLabel}
+        maxLossLabel={maxLossLabel}
+        commitmentTypeLabel={commitmentTypeLabel}
+        earlyExitPenaltyLabel={earlyExitPenaltyLabel}
+      />
+
+      <div className={styles.placeholder} aria-hidden="true">
+        Other commitment detail sections (e.g. attestations, timeline) will go here.
+      </div>
+    </main>
+  )
 }
