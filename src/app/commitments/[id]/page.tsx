@@ -7,7 +7,6 @@ import CommitmentHealthMetrics from '@/components/dashboard/CommitmentHealthMetr
 import CommitmentDetailAllocationConstraints from '@/components/CommitmentDetailAllocationConstraints';
 import { CommitmentDetailNftSection } from '@/components/dashboard/CommitmentDetailNftSection';
 import { CommitmentDetailParameters } from '@/components/CommitmentDetailParameters/CommitmentDetailParameters';
-import styles from './page.module.css';
 
 import React from 'react';
 import Link from 'next/link';
