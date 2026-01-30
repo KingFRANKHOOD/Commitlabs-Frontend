@@ -48,8 +48,8 @@ export default function VolatilityExposureMeter({
         aria-valuetext={`${percent} percent, ${level}`}
       >
         <div
-          className={styles.barFill}
-          style={{ width: `${percent}%` }}
+          className={styles.barMask}
+          style={{ width: `${100 - percent}%` }}
         />
       </div>
 

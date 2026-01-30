@@ -15,6 +15,14 @@ const MOCK_COMPLIANCE_DATA = [
     { date: 'Jan 30', complianceScore: 99 },
 ];
 
+const MOCK_DRAWDOWN_DATA = [
+    { date: 'Jan 10', drawdownPercent: 0 },
+    { date: 'Jan 15', drawdownPercent: 0.35 },
+    { date: 'Jan 20', drawdownPercent: 0.58 },
+    { date: 'Jan 25', drawdownPercent: 0.52 },
+    { date: 'Jan 28', drawdownPercent: 0.78 },
+];
+
 export default function CommitmentDetailPage({
     params,
 }: {
@@ -50,7 +58,12 @@ export default function CommitmentDetailPage({
 
                 {/* Health Metrics Section */}
                 <section>
-                    <CommitmentHealthMetrics complianceData={MOCK_COMPLIANCE_DATA} />
+                    <CommitmentHealthMetrics 
+                        complianceData={MOCK_COMPLIANCE_DATA}
+                        drawdownData={MOCK_DRAWDOWN_DATA}
+                        thresholdPercent={0.5}
+                        volatilityPercent={65}
+                    />
                 </section>
             </div>
         </main>
