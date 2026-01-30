@@ -1,20 +1,36 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
+import CreateCommitmentStepSelectType from '@/components/CreateCommitmentStepSelectType'
 import CreateCommitmentStepConfigure from '@/components/CreateCommitmentStepConfigure'
+import CommitmentCreatedModal from '@/components/modals/Commitmentcreatedmodal'
 
 type CommitmentType = 'safe' | 'balanced' | 'aggressive'
 type Step = 1 | 2 | 3
 
+// Generate a random commitment ID (in production, this comes from the blockchain)
+function generateCommitmentId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let id = 'CMT-'
+  for (let i = 0; i < 7; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return id
+}
+
 export default function CreateCommitment() {
-  const [currentStep, setCurrentStep] = useState<Step>(2) // Start at step 2 for demo
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState<Step>(1)
   const [commitmentType, setCommitmentType] = useState<CommitmentType>('balanced')
+  const [selectedType, setSelectedType] = useState<'safe' | 'balanced' | 'aggressive' | null>(null)
   const [amount, setAmount] = useState<string>('')
   const [asset, setAsset] = useState<string>('XLM')
   const [durationDays, setDurationDays] = useState<number>(90)
   const [maxLossPercent, setMaxLossPercent] = useState<number>(100)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [commitmentId, setCommitmentId] = useState('')
 
   // Mock available balance - in real app, this would come from wallet/API
   const availableBalance = 10000
@@ -52,9 +68,21 @@ export default function CreateCommitment() {
 
   const maxLossWarning = maxLossPercent > 80
 
+  const handleSelectType = (type: 'safe' | 'balanced' | 'aggressive') => {
+    setSelectedType(type)
+    setCommitmentType(type)
+  }
+
+  const handleStepNext = (type: 'safe' | 'balanced' | 'aggressive') => {
+    console.log('Selected commitment type:', type)
+    setCurrentStep(2)
+  }
+
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((currentStep - 1) as Step)
+    } else {
+      router.push('/')
     }
   }
 
@@ -72,147 +100,105 @@ export default function CreateCommitment() {
       durationDays,
       maxLossPercent,
     })
-    alert('Commitment creation will be implemented here')
+
+    // Simulate transaction success
+    setTimeout(() => {
+      const newCommitmentId = generateCommitmentId()
+      setCommitmentId(newCommitmentId)
+      setShowSuccessModal(true)
+    }, 500)
   }
 
-  return (
-    <main id="main-content" className={styles.container}>
-      {/* Header */}
-      <header className={styles.header}>
-        <Link href="/" className={styles.backLink} aria-label="Back to Home">
-          ← Back
-        </Link>
-        <h1 className={styles.pageTitle}>Create Commitment</h1>
-        <p className={styles.pageSubtitle}>
-          Define your liquidity commitment with explicit rules and guarantees
-        </p>
-      </header>
+  const handleViewCommitment = () => {
+    const numericId = commitmentId.split('-')[1] || '1'
+    router.push(`/commitments/${numericId}`)
+  }
 
-      {/* Stepper */}
-      <nav className={styles.stepper} aria-label="Progress">
-        <div className={styles.stepperTrack}>
-          {/* Step 1 */}
-          <div className={`${styles.step} ${currentStep > 1 ? styles.completed : ''} ${currentStep === 1 ? styles.active : ''}`}>
-            <div className={styles.stepCircle}>
-              {currentStep > 1 ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              ) : (
-                '1'
-              )}
-            </div>
-            <span className={styles.stepLabel}>Select Type</span>
-          </div>
+  const handleCreateAnother = () => {
+    setShowSuccessModal(false)
+    setSelectedType(null)
+    setCurrentStep(1)
+    setCommitmentId('')
+    setCommitmentType('balanced')
+    setAmount('')
+    setAsset('XLM')
+    setDurationDays(90)
+    setMaxLossPercent(100)
+  }
 
-          {/* Connector */}
-          <div className={`${styles.stepConnector} ${currentStep > 1 ? styles.completedConnector : ''}`} />
+  const handleCloseModal = () => {
+    setShowSuccessModal(false)
+    router.push('/commitments')
+  }
 
-          {/* Step 2 */}
-          <div className={`${styles.step} ${currentStep > 2 ? styles.completed : ''} ${currentStep === 2 ? styles.active : ''}`}>
-            <div className={styles.stepCircle}>
-              {currentStep > 2 ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              ) : (
-                '2'
-              )}
-            </div>
-            <span className={styles.stepLabel}>Configure</span>
-          </div>
+  const handleViewOnExplorer = () => {
+    const explorerUrl = `https://stellar.expert/explorer/testnet/tx/${commitmentId}`
+    window.open(explorerUrl, '_blank')
+  }
 
-          {/* Connector */}
-          <div className={`${styles.stepConnector} ${currentStep > 2 ? styles.completedConnector : ''}`} />
+  // Render Step 1 - Select Type using upstream component
+  if (currentStep === 1) {
+    return (
+      <>
+        <CreateCommitmentStepSelectType
+          selectedType={selectedType}
+          onSelectType={handleSelectType}
+          onNext={handleStepNext}
+          onBack={handleBack}
+        />
 
-          {/* Step 3 */}
-          <div className={`${styles.step} ${currentStep === 3 ? styles.active : ''}`}>
-            <div className={styles.stepCircle}>3</div>
-            <span className={styles.stepLabel}>Review</span>
-          </div>
-        </div>
-      </nav>
+        <CommitmentCreatedModal
+          isOpen={showSuccessModal}
+          commitmentId={commitmentId}
+          onViewCommitment={handleViewCommitment}
+          onCreateAnother={handleCreateAnother}
+          onClose={handleCloseModal}
+          onViewOnExplorer={handleViewOnExplorer}
+        />
+      </>
+    )
+  }
 
-      {/* Step Content */}
-      <div className={styles.stepContent}>
-        {currentStep === 1 && (
-          <div className={styles.step1Content}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Select Type</h2>
-              <p className={styles.sectionSubtitle}>Choose a commitment type that matches your risk profile</p>
-            </div>
-            <div className={styles.typeSelector}>
-              <button
-                type="button"
-                className={`${styles.typeButton} ${commitmentType === 'safe' ? styles.active : ''}`}
-                onClick={() => setCommitmentType('safe')}
-                aria-pressed={commitmentType === 'safe'}
-              >
-                <h3>Safe Commitment</h3>
-                <p>Duration: 30 days</p>
-                <p>Max loss: 2%</p>
-                <p>Lower but stable yield</p>
-              </button>
-              <button
-                type="button"
-                className={`${styles.typeButton} ${commitmentType === 'balanced' ? styles.active : ''}`}
-                onClick={() => setCommitmentType('balanced')}
-                aria-pressed={commitmentType === 'balanced'}
-              >
-                <h3>Balanced Commitment</h3>
-                <p>Duration: 60 days</p>
-                <p>Max loss: 8%</p>
-                <p>Medium yield</p>
-              </button>
-              <button
-                type="button"
-                className={`${styles.typeButton} ${commitmentType === 'aggressive' ? styles.active : ''}`}
-                onClick={() => setCommitmentType('aggressive')}
-                aria-pressed={commitmentType === 'aggressive'}
-              >
-                <h3>Aggressive Commitment</h3>
-                <p>Duration: 90 days</p>
-                <p>No loss protection</p>
-                <p>Highest yield potential</p>
-              </button>
-            </div>
-            <div className={styles.step1Actions}>
-              <button
-                type="button"
-                className={styles.continueButton}
-                onClick={handleNext}
-              >
-                Continue
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
+  // Render Step 2 - Configure
+  if (currentStep === 2) {
+    return (
+      <>
+        <CreateCommitmentStepConfigure
+          amount={amount}
+          asset={asset}
+          availableBalance={availableBalance}
+          durationDays={durationDays}
+          maxLossPercent={maxLossPercent}
+          earlyExitPenalty={earlyExitPenalty}
+          estimatedFees={estimatedFees}
+          isValid={isStep2Valid}
+          onChangeAmount={setAmount}
+          onChangeAsset={setAsset}
+          onChangeDuration={setDurationDays}
+          onChangeMaxLoss={setMaxLossPercent}
+          onBack={handleBack}
+          onNext={handleNext}
+          amountError={amountError}
+          maxLossWarning={maxLossWarning}
+        />
 
-        {currentStep === 2 && (
-          <CreateCommitmentStepConfigure
-            amount={amount}
-            asset={asset}
-            availableBalance={availableBalance}
-            durationDays={durationDays}
-            maxLossPercent={maxLossPercent}
-            earlyExitPenalty={earlyExitPenalty}
-            estimatedFees={estimatedFees}
-            isValid={isStep2Valid}
-            onChangeAmount={setAmount}
-            onChangeAsset={setAsset}
-            onChangeDuration={setDurationDays}
-            onChangeMaxLoss={setMaxLossPercent}
-            onBack={handleBack}
-            onNext={handleNext}
-            amountError={amountError}
-            maxLossWarning={maxLossWarning}
-          />
-        )}
+        <CommitmentCreatedModal
+          isOpen={showSuccessModal}
+          commitmentId={commitmentId}
+          onViewCommitment={handleViewCommitment}
+          onCreateAnother={handleCreateAnother}
+          onClose={handleCloseModal}
+          onViewOnExplorer={handleViewOnExplorer}
+        />
+      </>
+    )
+  }
 
-        {currentStep === 3 && (
+  // Render Step 3 - Review & Confirm
+  if (currentStep === 3) {
+    return (
+      <>
+        <main id="main-content" className={styles.container}>
           <div className={styles.step3Content}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Review & Confirm</h2>
@@ -261,9 +247,17 @@ export default function CreateCommitment() {
               </button>
             </div>
           </div>
-        )}
-      </div>
-    </main>
-  )
-}
+        </main>
 
+        <CommitmentCreatedModal
+          isOpen={showSuccessModal}
+          commitmentId={commitmentId}
+          onViewCommitment={handleViewCommitment}
+          onCreateAnother={handleCreateAnother}
+          onClose={handleCloseModal}
+          onViewOnExplorer={handleViewOnExplorer}
+        />
+      </>
+    )
+  }
+}
