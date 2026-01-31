@@ -6,8 +6,8 @@ import { twMerge } from 'tailwind-merge';
 import { HealthMetricsComplianceChart } from './HealthMetricsComplianceChart';
 import { HealthMetricsDrawdownChart } from './HealthMetricsDrawdownChart';
 import { HealthMetricsValueHistoryChart } from './HealthMetricsValueHistoryChart';
-
-
+import { HealthMetricsFeeGenerationChart } from './HealthMetricsFeeGenerationChart';
+import { TrendingUp, TrendingDown, DollarSign, CheckCircle } from 'lucide-react';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -15,10 +15,18 @@ function cn(...inputs: ClassValue[]) {
 
 type TabType = 'value' | 'drawdown' | 'fee' | 'compliance';
 
+const tabIcons: Record<TabType, React.ReactNode> = {
+    value: <TrendingUp className="w-4 h-4" />,
+    drawdown: <TrendingDown className="w-4 h-4" />,
+    fee: <DollarSign className="w-4 h-4" />,
+    compliance: <CheckCircle className="w-4 h-4" />,
+};
+
 interface CommitmentHealthMetricsProps {
     complianceData: Array<{ date: string; complianceScore: number }>;
     drawdownData: Array<{ date: string; drawdownPercent: number }>;
     valueHistoryData: Array<{ date: string; currentValue: number; initialAmount?: number }>;
+    feeGenerationData: Array<{ date: string; feeAmount: number }>;
     thresholdPercent?: number;
     volatilityPercent?: number;
 }
@@ -27,6 +35,7 @@ export default function CommitmentHealthMetrics({
     complianceData,
     drawdownData,
     valueHistoryData,
+    feeGenerationData,
     thresholdPercent,
     volatilityPercent,
 }: CommitmentHealthMetricsProps) {
@@ -50,12 +59,13 @@ export default function CommitmentHealthMetrics({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                'px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                                'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
                                 activeTab === tab.id
-                                    ? 'bg-[#222] text-[#4ADE80] shadow-sm'
+                                    ? 'bg-[#222] text-[#0ff0fc] shadow-sm'
                                     : 'text-[#666] hover:text-[#99a1af] hover:bg-[#1a1a1a]'
                             )}
                         >
+                            {tabIcons[tab.id]}
                             {tab.label}
                         </button>
                     ))}
@@ -76,15 +86,14 @@ export default function CommitmentHealthMetrics({
                         volatilityPercent={volatilityPercent}
                     />
                 )}
+                {activeTab === 'fee' && (
+                    <HealthMetricsFeeGenerationChart 
+                        data={feeGenerationData}
+                        volatilityPercent={volatilityPercent}
+                    />
+                )}
                 {activeTab === 'compliance' && (
                     <HealthMetricsComplianceChart data={complianceData} />
-                )}
-                {activeTab !== 'value' && activeTab !== 'compliance' && activeTab !== 'drawdown' && (
-                    <div className="flex items-center justify-center h-[300px] border border-[#222] border-dashed rounded-xl">
-                        <p className="text-[#666]">
-                            {tabs.find((t) => t.id === activeTab)?.label} chart placeholder
-                        </p>
-                    </div>
                 )}
             </div>
         </div>

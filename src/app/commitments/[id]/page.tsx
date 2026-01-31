@@ -7,6 +7,7 @@ import CommitmentHealthMetrics from '@/components/dashboard/CommitmentHealthMetr
 import CommitmentDetailAllocationConstraints from '@/components/CommitmentDetailAllocationConstraints';
 import { CommitmentDetailNftSection } from '@/components/dashboard/CommitmentDetailNftSection';
 import { CommitmentDetailParameters } from '@/components/CommitmentDetailParameters/CommitmentDetailParameters';
+import RecentAttestationsPanel from '@/components/RecentAttestationsPanel/RecentAttestationsPanel';
 
 // Mock Commitments
 const MOCK_COMMITMENTS: Record<
@@ -43,6 +44,63 @@ const MOCK_VALUE_HISTORY_DATA = [
     { date: 'Jan 25', currentValue: 53000, initialAmount: 50000 },
     { date: 'Jan 28', currentValue: 54000, initialAmount: 50000 },
 ];
+
+const MOCK_FEE_GENERATION_DATA = [
+    { date: 'Jan 10', feeAmount: 25 },
+    { date: 'Jan 15', feeAmount: 45 },
+    { date: 'Jan 20', feeAmount: 78 },
+    { date: 'Jan 25', feeAmount: 92 },
+    { date: 'Jan 28', feeAmount: 125 },
+];
+
+const MOCK_ATTESTATIONS = [
+    {
+        id: '1',
+        title: 'Daily Compliance Check',
+        description: 'All parameters within acceptable ranges. No violations detected.',
+        txHash: '0xabcdef1234567890abcdef1234567890',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        severity: 'ok' as const,
+    },
+    {
+        id: '2',
+        title: 'Allocation Verified',
+        description: 'Portfolio allocation meets all constraints. Safe protocol usage confirmed.',
+        txHash: '0x123456789abcdef123456789abcdef',
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        severity: 'ok' as const,
+    },
+    {
+        id: '3',
+        title: 'Increased Volatility',
+        description: 'Market volatility increased. Monitoring drawdown levels closely.',
+        txHash: '0x567890abcdef1234567890abcdef1234',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        severity: 'warning' as const,
+    },
+    {
+        id: '4',
+        title: 'Weekly Review',
+        description: 'Commitment performing well. All rules followed consistently.',
+        txHash: '0x90abcd1234567890abcd345678',
+        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        severity: 'ok' as const,
+    },
+    {
+        id: '5',
+        title: 'Commitment Created',
+        description: 'Initial commitment parameters set and validated on-chain.',
+        txHash: '0xdef1234567890abcdef890abc',
+        timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+        severity: 'ok' as const,
+    },
+];
+
+const MOCK_ATTESTATION_SUMMARY = {
+    complianceCount: 4,
+    warningCount: 1,
+    violationCount: 0,
+};
 
 // Mock data for the NFT section
 const MOCK_NFT_DATA = {
@@ -128,8 +186,16 @@ export default function CommitmentDetailPage({
                             complianceData={MOCK_COMPLIANCE_DATA}
                             drawdownData={MOCK_DRAWDOWN_DATA}
                             valueHistoryData={MOCK_VALUE_HISTORY_DATA}
+                            feeGenerationData={MOCK_FEE_GENERATION_DATA}
                             thresholdPercent={0.5}
-                            volatilityPercent={65}
+                            volatilityPercent={35}
+                        />
+
+                        <RecentAttestationsPanel
+                            attestations={MOCK_ATTESTATIONS}
+                            summary={MOCK_ATTESTATION_SUMMARY}
+                            onSelectAttestation={(id) => console.log('Selected attestation:', id)}
+                            onViewAll={() => console.log('View all attestations')}
                         />
                         
                         <CommitmentDetailAllocationConstraints 
