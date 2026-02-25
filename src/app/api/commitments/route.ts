@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/backend/rateLimit';
+import { logCommitmentCreated } from '@/lib/backend/logger';
 import { createCommitmentOnChain } from '@/lib/backend/services/contracts';
 import {
     normalizeBackendError,
@@ -9,6 +10,21 @@ import {
 import { withApiHandler } from '@/lib/backend/withApiHandler';
 import { ok } from '@/lib/backend/apiResponse';
 import { TooManyRequestsError } from '@/lib/backend/errors';
+import { getMockData } from '@/lib/backend/mockDb';
+
+export const GET = withApiHandler(async (req: NextRequest) => {
+    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+
+    const isAllowed = await checkRateLimit(ip, 'api/commitments');
+    if (!isAllowed) {
+        throw new TooManyRequestsError();
+    }
+
+    const { commitments } = await getMockData();
+
+    return ok({ commitments }, 200);
+});
+import { logInfo } from '@/lib/backend/logger';
 import { getBackendConfig } from '@/lib/backend/config';
 import { createCommitmentOnChain } from '@/lib/backend/contracts';
 import { parseCreateCommitmentInput } from '@/lib/backend/validation';
@@ -135,6 +151,15 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         throw new TooManyRequestsError();
     }
 
+    logInfo(req, 'Creating commitment', { ip });
+
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: validate request body, interact with Soroban smart contract,
+    //       store commitment record in database, mint NFT, etc.
+
+    return ok({ message: 'Commitment created successfully.' }, 201);
+});
     const input = await parseCreateCommitmentInput(req);
     const config = getBackendConfig();
     const chainResult = await createCommitmentOnChain(config, input);
@@ -162,6 +187,19 @@ export const POST = withApiHandler(async (req: NextRequest) => {
             metadata: body.metadata
         });
 
+    // analytics hook
+    try {
+        const body = await req.json();
+        logCommitmentCreated({ ip, ...body });
+    } catch (e) {
+        // body might be empty or invalid; still log IP
+        logCommitmentCreated({ ip, error: 'failed to parse request body' });
+    }
+
+    return NextResponse.json({
+        message: 'Commitments creation endpoint stub - rate limiting applied',
+        ip: ip
+    });
      return ok({ message: 'Commitment created successfully.' }, 201);
 }
 

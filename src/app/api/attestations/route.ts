@@ -8,6 +8,21 @@ import {
 import { withApiHandler } from '@/lib/backend/withApiHandler';
 import { ok } from '@/lib/backend/apiResponse';
 import { TooManyRequestsError } from '@/lib/backend/errors';
+import { getMockData } from '@/lib/backend/mockDb';
+
+export const GET = withApiHandler(async (req: NextRequest) => {
+    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+
+    const isAllowed = await checkRateLimit(ip, 'api/attestations');
+    if (!isAllowed) {
+        throw new TooManyRequestsError();
+    }
+
+    const { attestations } = await getMockData();
+
+    return ok({ attestations }, 200);
+});
+import { logAttestation } from '@/lib/backend/logger';
 import { mapAttestationFromChain } from '@/lib/backend/dto';
 
 interface RecordAttestationRequestBody {
@@ -29,6 +44,12 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         throw new TooManyRequestsError();
     }
 
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: verify on-chain data, store attestation in database, etc.
+
+    return ok({ message: 'Attestation recorded successfully.' }, 201);
+});
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const attestation = mapAttestationFromChain({
         id: (body.attestationId as string | undefined) ?? `att_${Date.now()}`,
@@ -54,6 +75,16 @@ export const POST = withApiHandler(async (req: NextRequest) => {
             details: body.details
         });
 
+    // analytics hook
+    try {
+        const body = await req.json();
+        logAttestation({ ip, ...body });
+    } catch (e) {
+        logAttestation({ ip, error: 'failed to parse request body' });
+    }
+
+    return ok({ message: 'Attestation recorded successfully.' }, 201);
+});
         return NextResponse.json(result, { status: 201 });
     } catch (error) {
         const normalized = normalizeBackendError(error, {
