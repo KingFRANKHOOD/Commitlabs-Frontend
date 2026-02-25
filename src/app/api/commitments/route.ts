@@ -9,6 +9,10 @@ import {
 import { withApiHandler } from '@/lib/backend/withApiHandler';
 import { ok } from '@/lib/backend/apiResponse';
 import { TooManyRequestsError } from '@/lib/backend/errors';
+import { getBackendConfig } from '@/lib/backend/config';
+import { createCommitmentOnChain } from '@/lib/backend/contracts';
+import { parseCreateCommitmentInput } from '@/lib/backend/validation';
+import { mapCommitmentFromChain } from '@/lib/backend/dto';
 import {
     parsePaginationParams,
     parseSortParams,
@@ -131,6 +135,22 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         throw new TooManyRequestsError();
     }
 
+    const input = await parseCreateCommitmentInput(req);
+    const config = getBackendConfig();
+    const chainResult = await createCommitmentOnChain(config, input);
+    const commitment = mapCommitmentFromChain(chainResult.commitment);
+
+    return ok(
+        {
+            commitmentId: chainResult.commitmentId,
+            nftTokenId: chainResult.nftTokenId,
+            txHash: chainResult.txHash ?? null,
+            reference: chainResult.reference ?? null,
+            commitment,
+        },
+        201
+    );
+});
     try {
         const body = (await req.json()) as CreateCommitmentRequestBody;
         const result = await createCommitmentOnChain({
