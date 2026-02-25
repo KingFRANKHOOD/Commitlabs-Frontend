@@ -1,6 +1,6 @@
 // src/app/api/attestations/route.ts
 import { NextRequest } from 'next/server';
-import { validatePagination, validateFilters, validateAddress, handleValidationError, ValidationError } from '@/lib/backend/validation';
+import { validatePagination, validateFilters, validateAddress, handleValidationError, createAttestationSchema } from '@/lib/backend/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,26 +41,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { commitmentId, attesterAddress, rating, comment } = body;
 
-    // Validate required fields
-    if (!commitmentId || typeof commitmentId !== 'string') {
-      throw new ValidationError('Commitment ID is required and must be a string', 'commitmentId');
-    }
-    if (rating === undefined || typeof rating !== 'number' || rating < 1 || rating > 5) {
-      throw new ValidationError('Rating is required and must be between 1 and 5', 'rating');
-    }
-
-    // Validate attester address
-    const validatedAddress = validateAddress(attesterAddress);
+    // Validate request body
+    const validatedData = createAttestationSchema.parse(body);
 
     // Mock creation
     const newAttestation = {
       id: Date.now().toString(),
-      commitmentId,
-      attester: validatedAddress,
-      rating,
-      comment: comment || '',
+      commitmentId: validatedData.commitmentId,
+      attester: validatedData.attesterAddress,
+      rating: validatedData.rating,
+      comment: validatedData.comment || '',
       createdAt: new Date().toISOString()
     };
 

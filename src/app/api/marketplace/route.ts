@@ -1,6 +1,6 @@
 // src/app/api/marketplace/route.ts
 import { NextRequest } from 'next/server';
-import { validatePagination, validateFilters, validateAddress, validateAmount, handleValidationError, ValidationError } from '@/lib/backend/validation';
+import { validatePagination, validateFilters, validateAddress, validateAmount, handleValidationError, createMarketplaceListingSchema } from '@/lib/backend/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,30 +45,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, price, category, sellerAddress } = body;
 
-    // Validate required fields
-    if (!title || typeof title !== 'string') {
-      throw new ValidationError('Title is required and must be a string', 'title');
-    }
-    if (!category || typeof category !== 'string') {
-      throw new ValidationError('Category is required and must be a string', 'category');
-    }
-
-    // Validate price
-    const validatedPrice = validateAmount(price);
-
-    // Validate seller address
-    const validatedAddress = validateAddress(sellerAddress);
+    // Validate request body
+    const validatedData = createMarketplaceListingSchema.parse(body);
 
     // Mock creation
     const newListing = {
       id: Date.now().toString(),
-      title,
-      description: description || '',
-      price: validatedPrice,
-      category,
-      seller: validatedAddress,
+      title: validatedData.title,
+      description: validatedData.description || '',
+      price: validatedData.price,
+      category: validatedData.category,
+      seller: validatedData.sellerAddress,
       createdAt: new Date().toISOString()
     };
 

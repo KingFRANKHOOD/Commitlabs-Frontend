@@ -1,6 +1,6 @@
 // src/app/api/commitments/route.ts
 import { NextRequest } from 'next/server';
-import { validatePagination, validateFilters, validateAddress, validateAmount, handleValidationError, ValidationError } from '@/lib/backend/validation';
+import { validatePagination, validateFilters, validateAddress, handleValidationError, ValidationError, createCommitmentSchema } from '@/lib/backend/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,29 +41,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, amount, creatorAddress } = body;
 
-    // Validate required fields
-    if (!title || typeof title !== 'string') {
-      throw new ValidationError('Title is required and must be a string', 'title');
-    }
-    if (!description || typeof description !== 'string') {
-      throw new ValidationError('Description is required and must be a string', 'description');
-    }
-
-    // Validate amount
-    const validatedAmount = validateAmount(amount);
-
-    // Validate creator address
-    const validatedAddress = validateAddress(creatorAddress);
+    // Validate request body
+    const validatedData = createCommitmentSchema.parse(body);
 
     // Mock creation - in real app, save to database
     const newCommitment = {
       id: Date.now().toString(),
-      title,
-      description,
-      amount: validatedAmount,
-      creator: validatedAddress,
+      title: validatedData.title,
+      description: validatedData.description,
+      amount: validatedData.amount,
+      creator: validatedData.creatorAddress,
       createdAt: new Date().toISOString()
     };
 
