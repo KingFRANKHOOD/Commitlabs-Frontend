@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/backend/rateLimit';
+import { logAttestation } from '@/lib/backend/logger';
 
 export async function POST(req: NextRequest) {
     // Get identifying key (IP address or user ID if authenticated)
@@ -17,6 +18,14 @@ export async function POST(req: NextRequest) {
 
     // TODO: Implement attestation recording logic
     // e.g., verify on-chain data, store in database, etc.
+
+    // analytics hook
+    try {
+        const body = await req.json();
+        logAttestation({ ip, ...body });
+    } catch (e) {
+        logAttestation({ ip, error: 'failed to parse request body' });
+    }
 
     return NextResponse.json({
         message: 'Attestations recording endpoint stub - rate limiting applied',

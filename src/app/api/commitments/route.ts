@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/backend/rateLimit';
+import { logCommitmentCreated } from '@/lib/backend/logger';
 
 export async function POST(req: NextRequest) {
     // Get identifying key (IP address or user ID if authenticated)
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
 
     // TODO: Implement commitment creation logic
     // e.g., interact with smart contract, store in database, etc.
+
+    // analytics hook
+    try {
+        const body = await req.json();
+        logCommitmentCreated({ ip, ...body });
+    } catch (e) {
+        // body might be empty or invalid; still log IP
+        logCommitmentCreated({ ip, error: 'failed to parse request body' });
+    }
 
     return NextResponse.json({
         message: 'Commitments creation endpoint stub - rate limiting applied',
