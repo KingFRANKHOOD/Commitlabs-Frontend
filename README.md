@@ -115,6 +115,39 @@ src/
 
 ## 🤝 Contributing
 
+## Security Headers
+
+This project includes a reusable helper to attach standard security headers to HTTP responses.
+
+**Usage:**
+
+1. Import the helper:
+   ```typescript
+   import { attachSecurityHeaders } from '@/utils/response';
+   ```
+
+2. Wrap your response object before returning it in a route handler:
+   ```typescript
+   import { NextResponse } from 'next/server';
+   import { attachSecurityHeaders } from '@/utils/response';
+
+   export async function GET() {
+     const response = NextResponse.json({ data: 'secure content' });
+     return attachSecurityHeaders(response);
+   }
+   ```
+
+**Customization:**
+
+- **Content-Security-Policy (CSP):** You can override the default CSP by passing a second argument.
+  ```typescript
+  return attachSecurityHeaders(response, "default-src 'none'; img-src 'self'");
+  ```
+
+- **Disabling/Modifying Headers:**
+  The `attachSecurityHeaders` function returns the modified `Response` object. You can further modify headers on the returned object if needed, or update the `src/utils/response.ts` file to change default behaviors globally.
+
+## License
 We welcome contributions! Please see our [Developer Guide](./DEVELOPER_GUIDE.md) for detailed instructions on coding standards, testing procedures, and the pull request process.
 
 ## 📄 License

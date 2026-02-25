@@ -1,26 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/backend/rateLimit';
+import { withApiHandler } from '@/lib/backend/withApiHandler';
+import { ok } from '@/lib/backend/apiResponse';
+import { TooManyRequestsError } from '@/lib/backend/errors';
 
-export async function POST(req: NextRequest) {
-    // Get identifying key (IP address or user ID if authenticated)
-    const ip = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
 
-    // Apply rate limiting check
+export const POST = withApiHandler(async (req: NextRequest) => {
+    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+
     const isAllowed = await checkRateLimit(ip, 'api/attestations');
-
     if (!isAllowed) {
-        return NextResponse.json(
-            { error: 'Too many requests' },
-            { status: 429 }
-        );
+        throw new TooManyRequestsError();
     }
 
     // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
     // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
-    // TODO: Implement attestation recording logic (on-chain verification + database writes).
+    // TODO: verify on-chain data, store attestation in database, etc.
 
-    return NextResponse.json({
-        message: 'Attestations recording endpoint stub - rate limiting applied',
-        ip: ip
-    });
-}
+    return ok({ message: 'Attestation recorded successfully.' }, 201);
+});
