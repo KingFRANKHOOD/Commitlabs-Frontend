@@ -3,6 +3,20 @@ import { checkRateLimit } from '@/lib/backend/rateLimit';
 import { withApiHandler } from '@/lib/backend/withApiHandler';
 import { ok } from '@/lib/backend/apiResponse';
 import { TooManyRequestsError } from '@/lib/backend/errors';
+import { getMockData } from '@/lib/backend/mockDb';
+
+export const GET = withApiHandler(async (req: NextRequest) => {
+    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+
+    const isAllowed = await checkRateLimit(ip, 'api/attestations');
+    if (!isAllowed) {
+        throw new TooManyRequestsError();
+    }
+
+    const { attestations } = await getMockData();
+
+    return ok({ attestations }, 200);
+});
 
 
 export const POST = withApiHandler(async (req: NextRequest) => {
