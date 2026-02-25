@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // TODO: Implement attestation recording logic
-    // e.g., verify on-chain data, store in database, etc.
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: Implement attestation recording logic (on-chain verification + database writes).
 
     return NextResponse.json({
         message: 'Attestations recording endpoint stub - rate limiting applied',

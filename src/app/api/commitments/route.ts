@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // TODO: Implement commitment creation logic
-    // e.g., interact with smart contract, store in database, etc.
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: Implement commitment creation logic (smart contract + database writes).
 
     return NextResponse.json({
         message: 'Commitments creation endpoint stub - rate limiting applied',
