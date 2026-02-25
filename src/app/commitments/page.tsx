@@ -149,7 +149,7 @@ export default function MyCommitments() {
 
   // Derived State
   const filteredCommitments = useMemo(() => {
-    let filtered = commitmentsList.filter((c) => {
+    const filtered = mockCommitments.filter((c) => {
       const matchesSearch = c.id.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'All' || c.status.toLowerCase() === statusFilter.toLowerCase()
       const matchesType = typeFilter === 'All' || c.type.toLowerCase() === typeFilter.toLowerCase()

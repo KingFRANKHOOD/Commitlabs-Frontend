@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 import CreateCommitmentStepSelectType from '@/components/CreateCommitmentStepSelectType'
 import CreateCommitmentStepConfigure from '@/components/CreateCommitmentStepConfigure'
-import CreateCommitmentStepReview from '@/components/CreateCommitmentStepReview';        
+import CreateCommitmentStepReview from '@/components/CreateCommitmentStepReview'
 import CommitmentCreatedModal from '@/components/modals/Commitmentcreatedmodal'
 
 type CommitmentType = 'safe' | 'balanced' | 'aggressive'
@@ -22,17 +22,17 @@ function generateCommitmentId(): string {
 }
 
 export default function CreateCommitment() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [selectedType, setSelectedType] = useState<'safe' | 'balanced' | 'aggressive' | null>(null);
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [selectedType, setSelectedType] = useState<CommitmentType | null>(null)
   const [commitmentType, setCommitmentType] = useState<CommitmentType>('balanced')
   const [amount, setAmount] = useState<string>('')
   const [asset, setAsset] = useState<string>('XLM')
   const [durationDays, setDurationDays] = useState<number>(90)
   const [maxLossPercent, setMaxLossPercent] = useState<number>(100)
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [commitmentId, setCommitmentId] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [commitmentId, setCommitmentId] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Mock data based on selected type
   // TODO: This should be replaced with real-time data fetching from the blockchain
@@ -97,18 +97,14 @@ export default function CreateCommitment() {
   // Mock available balance - in real app, this would come from wallet/API
   const availableBalance = 10000
 
-  // Derived values based on commitment parameters
+  // Derived values
   const earlyExitPenalty = useMemo(() => {
     const penalty = commitmentType === 'aggressive' ? 5 : commitmentType === 'balanced' ? 3 : 2
-    return `${(Number(amount) || 0) * penalty / 100} ${asset}`
+    return `${((Number(amount) || 0) * penalty) / 100} ${asset}`
   }, [amount, asset, commitmentType])
 
-  const estimatedFees = useMemo(() => {
-    // Simple fee calculation - in real app, this would be more complex
-    return `0.00 ${asset}`
-  }, [asset])
+  const estimatedFees = useMemo(() => `0.00 ${asset}`, [asset])
 
-  // Validation
   const amountError = useMemo(() => {
     const numAmount = Number(amount)
     if (amount && numAmount <= 0) return 'Amount must be greater than 0'
@@ -130,9 +126,16 @@ export default function CreateCommitment() {
 
   const maxLossWarning = maxLossPercent > 80
 
-  const handleSelectType = (type: 'safe' | 'balanced' | 'aggressive') => {
+  // Step Handlers
+  const handleSelectType = (type: CommitmentType) => {
     setSelectedType(type)
     setCommitmentType(type)
+  }
+
+  const handleNextStep = () => {
+    if (step < 3) {
+      setStep(step + 1)
+    }
   }
 
   // Navigation handlers
@@ -145,38 +148,25 @@ export default function CreateCommitment() {
     }
   }
 
-  const handleNext = () => {
-    if (step < 3) {
-      setStep(step + 1)
-    }
+  const handleSubmit = () => {
+    setIsSubmitting(true)
+    setTimeout(() => {
+      setIsSubmitting(false)
+      const newCommitmentId = generateCommitmentId()
+      setCommitmentId(newCommitmentId)
+      setShowSuccessModal(true)
+    }, 2000)
   }
 
-  /**
-   * Submission Handler
-   * Currently mocks a blockchain transaction with a timeout.
-   * TODO: Integrate with wallet provider (Freighter) and Soroban contract.
-   */
-  const handleSubmit = () => {
-    setIsSubmitting(true);
-
-    // Simulate transaction delay
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const newCommitmentId = generateCommitmentId();
-      setCommitmentId(newCommitmentId);
-      setShowSuccessModal(true);
-    }, 2000);
-  };
-
   const handleViewCommitment = () => {
-    const numericId = commitmentId.split('-')[1] || '1';
-    router.push(`/commitments/${numericId}`);
-  };
+    const numericId = commitmentId.split('-')[1] || '1'
+    router.push(`/commitments/${numericId}`)
+  }
 
   const handleCreateAnother = () => {
     setShowSuccessModal(false)
     setSelectedType(null)
-    setCurrentStep(1)
+    setStep(1)
     setCommitmentId('')
     setCommitmentType('balanced')
     setAmount('')
@@ -191,9 +181,10 @@ export default function CreateCommitment() {
   }
 
   const handleViewOnExplorer = () => {
-    const explorerUrl = `https://stellar.expert/explorer/testnet/tx/${commitmentId}`;
-    window.open(explorerUrl, '_blank');
-  };
+    const explorerUrl = `https://stellar.expert/explorer/testnet/tx/${commitmentId}`
+    window.open(explorerUrl, '_blank')
+  }
+
 
   return (
     <>
@@ -201,14 +192,13 @@ export default function CreateCommitment() {
         <CreateCommitmentStepSelectType
           selectedType={selectedType}
           onSelectType={handleSelectType}
-          onNext={handleStepNext}
+          onNext={handleNextStep}
           onBack={handleBack}
         />
       )}
 
       {step === 2 && (
         <main id="main-content" className={styles.container}>
-          {/* Header */}
           <header className={styles.header}>
             <Link href="/" className={styles.backLink} aria-label="Back to Home">
               ← Back
@@ -219,10 +209,8 @@ export default function CreateCommitment() {
             </p>
           </header>
 
-          {/* Stepper */}
           <nav className={styles.stepper} aria-label="Progress">
             <div className={styles.stepperTrack}>
-              {/* Step 1 */}
               <div className={`${styles.step} ${styles.completed}`}>
                 <div className={styles.stepCircle}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -232,20 +220,16 @@ export default function CreateCommitment() {
                 <span className={styles.stepLabel}>Select Type</span>
               </div>
 
-              {/* Connector */}
-              <div className={`${styles.stepConnector} ${currentStep > 1 ? styles.completedConnector : ''}`} />
+              <div className={`${styles.stepConnector} ${step > 1 ? styles.completedConnector : ''}`} />
 
-              {/* Step 2 */}
               <div className={`${styles.step} ${styles.active}`}>
                 <div className={styles.stepCircle}>2</div>
                 <span className={styles.stepLabel}>Configure</span>
               </div>
 
-              {/* Connector */}
-              <div className={`${styles.stepConnector}`} />
+              <div className={styles.stepConnector} />
 
-              {/* Step 3 */}
-              <div className={`${styles.step}`}>
+              <div className={styles.step}>
                 <div className={styles.stepCircle}>3</div>
                 <span className={styles.stepLabel}>Review</span>
               </div>
@@ -266,7 +250,7 @@ export default function CreateCommitment() {
             onChangeDuration={setDurationDays}
             onChangeMaxLoss={setMaxLossPercent}
             onBack={handleBack}
-            onNext={handleNext}
+            onNext={handleNextStep}
             amountError={amountError}
             maxLossWarning={maxLossWarning}
           />
@@ -281,7 +265,7 @@ export default function CreateCommitment() {
             onBack={handleBack}
             onSubmit={handleSubmit}
           />
-          
+
           <CommitmentCreatedModal
             isOpen={showSuccessModal}
             commitmentId={commitmentId}
