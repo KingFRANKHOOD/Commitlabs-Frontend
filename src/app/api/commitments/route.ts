@@ -10,6 +10,7 @@ import {
 import { withApiHandler } from '@/lib/backend/withApiHandler';
 import { ok } from '@/lib/backend/apiResponse';
 import { TooManyRequestsError } from '@/lib/backend/errors';
+import { logInfo } from '@/lib/backend/logger';
 import { getBackendConfig } from '@/lib/backend/config';
 import { createCommitmentOnChain } from '@/lib/backend/contracts';
 import { parseCreateCommitmentInput } from '@/lib/backend/validation';
@@ -135,6 +136,8 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     if (!isAllowed) {
         throw new TooManyRequestsError();
     }
+
+    logInfo(req, 'Creating commitment', { ip });
 
     // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
     // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
