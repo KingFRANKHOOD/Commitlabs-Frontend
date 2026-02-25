@@ -136,6 +136,13 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         throw new TooManyRequestsError();
     }
 
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: validate request body, interact with Soroban smart contract,
+    //       store commitment record in database, mint NFT, etc.
+
+    return ok({ message: 'Commitment created successfully.' }, 201);
+});
     const input = await parseCreateCommitmentInput(req);
     const config = getBackendConfig();
     const chainResult = await createCommitmentOnChain(config, input);

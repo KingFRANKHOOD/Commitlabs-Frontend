@@ -30,6 +30,12 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         throw new TooManyRequestsError();
     }
 
+    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
+    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
+    // TODO: verify on-chain data, store attestation in database, etc.
+
+    return ok({ message: 'Attestation recorded successfully.' }, 201);
+});
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const attestation = mapAttestationFromChain({
         id: (body.attestationId as string | undefined) ?? `att_${Date.now()}`,
