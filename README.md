@@ -11,6 +11,7 @@ The frontend application for the CommitLabs protocol, a decentralized platform f
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
+- [API Reference](#api-reference)
 - [License](#license)
 
 ## 🔭 Overview
@@ -95,6 +96,8 @@ The application requires the following environment variables (defined in `.env`)
 | `NEXT_PUBLIC_COMMITMENT_CORE_CONTRACT` | Address of the Core Logic contract | *Required* |
 | `NEXT_PUBLIC_ATTESTATION_ENGINE_CONTRACT` | Address of the Attestation Engine contract | *Required* |
 
+Note: The project also supports a versioned contract configuration via `NEXT_PUBLIC_CONTRACTS_JSON` and `NEXT_PUBLIC_ACTIVE_CONTRACT_VERSION`. See [docs/config.md](docs/config.md) for details.
+
 ## 📂 Project Structure
 
 ```
@@ -115,7 +118,51 @@ src/
 
 ## 🤝 Contributing
 
+## Security Headers
+
+This project includes a reusable helper to attach standard security headers to HTTP responses.
+
+**Usage:**
+
+1. Import the helper:
+   ```typescript
+   import { attachSecurityHeaders } from '@/utils/response';
+   ```
+
+2. Wrap your response object before returning it in a route handler:
+   ```typescript
+   import { NextResponse } from 'next/server';
+   import { attachSecurityHeaders } from '@/utils/response';
+
+   export async function GET() {
+     const response = NextResponse.json({ data: 'secure content' });
+     return attachSecurityHeaders(response);
+   }
+   ```
+
+**Customization:**
+
+- **Content-Security-Policy (CSP):** You can override the default CSP by passing a second argument.
+  ```typescript
+  return attachSecurityHeaders(response, "default-src 'none'; img-src 'self'");
+  ```
+
+- **Disabling/Modifying Headers:**
+  The `attachSecurityHeaders` function returns the modified `Response` object. You can further modify headers on the returned object if needed, or update the `src/utils/response.ts` file to change default behaviors globally.
+
+## License
 We welcome contributions! Please see our [Developer Guide](./DEVELOPER_GUIDE.md) for detailed instructions on coding standards, testing procedures, and the pull request process.
+
+## 📡 API Reference
+
+A description of the backend endpoints exposed under `/api` can be found in:
+
+- [docs/backend-api-reference.md](./docs/backend-api-reference.md)
+
+This document includes available routes, required parameters, and example
+requests/responses.  It is intended for developers building against or testing
+the backend.
+
 
 ## 📄 License
 

@@ -1,25 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/backend/rateLimit';
+import { withApiHandler } from '@/lib/backend/withApiHandler';
+import { ok } from '@/lib/backend/apiResponse';
+import { TooManyRequestsError } from '@/lib/backend/errors';
 
-export async function POST(req: NextRequest) {
-    // Get identifying key (IP address)
-    const ip = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+export const POST = withApiHandler(async (req: NextRequest) => {
+    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
 
-    // Apply rate limiting check
     const isAllowed = await checkRateLimit(ip, 'api/auth');
-
     if (!isAllowed) {
-        return NextResponse.json(
-            { error: 'Too many requests' },
-            { status: 429 }
-        );
+        throw new TooManyRequestsError();
     }
 
-    // TODO: Implement actual authentication logic
-    // e.g., verify credentials, issue JWT, etc.
+    // TODO(issue-126): Implement session creation/refresh flow from docs/backend-session-csrf.md.
+    // TODO(issue-126): For browser-originated auth mutations, issue CSRF token according to the doc strategy.
+    // TODO: verify credentials (wallet signature / JWT), create signed cookie session (or chosen alternative), etc.
 
-    return NextResponse.json({
-        message: 'Auth endpoint stub - rate limiting applied',
-        ip: ip
-    });
-}
+    return ok({ message: 'Authentication successful.' });
+});
