@@ -1,100 +1,62 @@
+// src/app/api/attestations/route.ts
 import { NextRequest } from 'next/server';
-import { checkRateLimit } from '@/lib/backend/rateLimit';
-import { recordAttestationOnChain } from '@/lib/backend/services/contracts';
-import {
-    normalizeBackendError,
-    toBackendErrorResponse
-} from '@/lib/backend/errors';
-import { withApiHandler } from '@/lib/backend/withApiHandler';
-import { ok } from '@/lib/backend/apiResponse';
-import { TooManyRequestsError } from '@/lib/backend/errors';
-import { getMockData } from '@/lib/backend/mockDb';
+import { validatePagination, validateFilters, validateAddress, handleValidationError, createAttestationSchema } from '@/lib/backend/validation';
 
-export const GET = withApiHandler(async (req: NextRequest) => {
-    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get('page');
+    const limit = searchParams.get('limit');
+    const commitmentId = searchParams.get('commitmentId');
+    const attester = searchParams.get('attester');
 
-    const isAllowed = await checkRateLimit(ip, 'api/attestations');
-    if (!isAllowed) {
-        throw new TooManyRequestsError();
+    // Validate pagination
+    const pagination = validatePagination(page, limit);
+
+    // Validate filters
+    const filters = validateFilters({ commitmentId, attester });
+
+    // Validate addresses if provided
+    if (filters.attester) {
+      validateAddress(filters.attester as string);
     }
 
-    const { attestations } = await getMockData();
+    // Mock response
+    const attestations = [
+      { id: '1', commitmentId: '123', attester: 'GABC...', rating: 5, comment: 'Great commitment!' },
+      // ... more
+    ];
 
-    return ok({ attestations }, 200);
-});
-import { logAttestation } from '@/lib/backend/logger';
-import { mapAttestationFromChain } from '@/lib/backend/dto';
-
-interface RecordAttestationRequestBody {
-    commitmentId: string;
-    attestorAddress: string;
-    complianceScore: number;
-    violation: boolean;
-    feeEarned?: string;
-    timestamp?: string;
-    details?: Record<string, unknown>;
+    return Response.json({
+      attestations,
+      pagination,
+      filters,
+      total: attestations.length
+    });
+  } catch (error) {
+    return handleValidationError(error);
+  }
 }
 
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
 
-export const POST = withApiHandler(async (req: NextRequest) => {
-    const ip = req.ip ?? req.headers.get('x-forwarded-for') ?? 'anonymous';
+    // Validate request body
+    const validatedData = createAttestationSchema.parse(body);
 
-    const isAllowed = await checkRateLimit(ip, 'api/attestations');
-    if (!isAllowed) {
-        throw new TooManyRequestsError();
-    }
+    // Mock creation
+    const newAttestation = {
+      id: Date.now().toString(),
+      commitmentId: validatedData.commitmentId,
+      attester: validatedData.attesterAddress,
+      rating: validatedData.rating,
+      comment: validatedData.comment || '',
+      createdAt: new Date().toISOString()
+    };
 
-    // TODO(issue-126): Enforce validateSession(req) per docs/backend-session-csrf.md before mutating state.
-    // TODO(issue-126): Enforce CSRF validation for browser cookie-auth requests (token + origin checks).
-    // TODO: verify on-chain data, store attestation in database, etc.
-
-    return ok({ message: 'Attestation recorded successfully.' }, 201);
-});
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const attestation = mapAttestationFromChain({
-        id: (body.attestationId as string | undefined) ?? `att_${Date.now()}`,
-        commitmentId: (body.commitmentId as string | undefined) ?? 'unknown',
-        ownerAddress: (body.ownerAddress as string | undefined) ?? 'unknown',
-        kind: (body.kind as string | undefined) ?? 'compliance',
-        verdict: body.verdict as string | undefined,
-        observedAt: body.observedAt as string | number | Date | undefined,
-        details: body.details,
-    });
-
-    return ok({ attestation }, 201);
-});
-    try {
-        const body = (await req.json()) as RecordAttestationRequestBody;
-        const result = await recordAttestationOnChain({
-            commitmentId: body.commitmentId,
-            attestorAddress: body.attestorAddress,
-            complianceScore: body.complianceScore,
-            violation: body.violation,
-            feeEarned: body.feeEarned,
-            timestamp: body.timestamp,
-            details: body.details
-        });
-
-    // analytics hook
-    try {
-        const body = await req.json();
-        logAttestation({ ip, ...body });
-    } catch (e) {
-        logAttestation({ ip, error: 'failed to parse request body' });
-    }
-
-    return ok({ message: 'Attestation recorded successfully.' }, 201);
-});
-        return NextResponse.json(result, { status: 201 });
-    } catch (error) {
-        const normalized = normalizeBackendError(error, {
-            code: 'INTERNAL_ERROR',
-            message: 'Failed to record attestation.',
-            status: 500
-        });
-
-        return NextResponse.json(toBackendErrorResponse(normalized), {
-            status: normalized.status
-        });
-    }
+    return Response.json(newAttestation, { status: 201 });
+  } catch (error) {
+    return handleValidationError(error);
+  }
 }
